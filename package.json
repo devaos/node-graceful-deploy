@@ -1,0 +1,44 @@
+{
+  "name": "graceful-deploy",
+  "version": "0.0.1",
+  "description": "Gracefully deploy a node.js service with zero downtime, letting existing requests finish up while a new deployed process handles new incoming requests",
+  "main": "index.js",
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devaos/graceful-deploy.git"
+  },
+  "keywords": [
+    "graceful",
+    "deploy",
+    "upgrade",
+    "restart",
+    "reload",
+    "service",
+    "zero",
+    "downtime"
+  ],
+  "author": "Ari Aosved <ari.aosved@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/devaos/graceful-deploy/issues"
+  },
+  "dependencies": {
+    "winston": "*",
+    "underscore": "*"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.4",
+    "matchdep": "~0.3.0",
+    "grunt-contrib-jshint": "~0.9.2",
+    "grunt-contrib-clean": "~0.5",
+    "grunt-contrib-nodeunit": "~0.3.3",
+    "grunt-release": "~0.7.0",
+    "async": "*",
+    "portscanner": "*",
+    "temp": "*",
+    "nopt": "*"
+  }
+}
