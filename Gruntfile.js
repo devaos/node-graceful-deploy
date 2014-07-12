@@ -12,14 +12,12 @@ module.exports = function(grunt) {
     // Lint.
     jshint: {
       options: {
-        asi: true,
         node: true,
-        validthis: true,
-        loopfunc: true,
-        laxcomma: true
+        laxcomma: true,
+        asi: true,
       },
       files: {
-        src: ['tasks/**/*.js','<%= nodeunit.tests %>']
+        src: ['lib/**/*.js', 'tests/**/*.js']
       }
     },
 
@@ -49,8 +47,6 @@ module.exports = function(grunt) {
     }
 
   })
-
-  grunt.loadTasks('tasks')
 
   //============================================================================
 
