@@ -6,15 +6,9 @@
 Install npm package:
 
 ```bash
-npm install graceful-deploy --save-dev
-```
-
-Add the following to your project's `Gruntfile` in order to load the task:
-
-```js
-grunt.loadNpmTasks('graceful-deploy');
+npm install graceful-deploy --save
 ```
 
 ##Notes
 
-Unstable
+Unstable - In Progress - Check Back Tomorrow
