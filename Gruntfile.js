@@ -9,7 +9,7 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
 
-    // Lint.
+    // Lint
     jshint: {
       options: {
         node: true,
@@ -21,15 +21,27 @@ module.exports = function(grunt) {
       }
     },
 
-    // Before generating any new files, remove previously-created files.
+    // Before generating any new files, remove previously-created files
     clean: {
       coverage: ['coverage'],
       dist: ['coverage', 'node_modules']
     },
 
-    // Unit tests.
+    // Unit tests
     nodeunit: {
-      tests: ['tests/*_test.js']
+      tests: ['tests/unit/*_test.js']
+    },
+
+    // Test while you work
+    watch: {
+      dev: {
+        files: ['lib/**/*.js', 'tests/**/*.js'],
+        tasks: ['test'],
+      },
+      'dev-quick': {
+        files: ['lib/**/*.js', 'tests/**/*.js'],
+        tasks: ['jshint'],
+      }
     },
 
     // Automate version bumps
@@ -52,9 +64,12 @@ module.exports = function(grunt) {
 
   grunt.registerTask('test', [
     'clean:coverage',
+    'jshint',
     'nodeunit',
     'clean:coverage'
   ])
 
-  grunt.registerTask('default', ['jshint', 'test'])
+  grunt.registerTask('develop', ['test', 'watch:dev'])
+
+  grunt.registerTask('default', ['test'])
 }
