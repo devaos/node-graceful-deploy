@@ -6,7 +6,6 @@ var async = require('async')
   , child = require('child_process')
   , http = require('http')
   , portscanner = require('portscanner')
-  , readline = require('readline')
 
 //==============================================================================
 

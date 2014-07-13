@@ -2,10 +2,7 @@
 
 //==============================================================================
 
-var em = require('events').EventEmitter
-  , http = require('http')
-  , portscanner = require('portscanner')
-  , deploy = require('../../index')
+var deploy = require('../../index')
   , human = require('../../lib/human')
   , skinjob = require('../../lib/skinjob')
   , mocks = require('./lib/mocks')
@@ -35,7 +32,7 @@ var em = require('events').EventEmitter
 
 //==============================================================================
 
-exports.gracefulDeployServer = {
+exports.serverTest = {
   develFilesOk: [ ],
 
   setUp: function(done) {

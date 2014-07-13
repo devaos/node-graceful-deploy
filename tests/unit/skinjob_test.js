@@ -2,8 +2,8 @@
 
 //==============================================================================
 
-var http = require('http')
-  , deploy = require('../../index')
+var em = require('events').EventEmitter
+  , deploy = require('../../lib/skinjob')
   , mocks = require('./lib/mocks')
   , common = require('./lib/common')
 
@@ -31,7 +31,7 @@ var http = require('http')
 
 //==============================================================================
 
-exports.generalTest = {
+exports.commonTest = {
   develFilesOk: [ ],
 
   setUp: function(done) {
@@ -42,38 +42,19 @@ exports.generalTest = {
     common.tearDown(done)
   },
 
-  bindToServer: function(test) {
+  noServers: function(test) {
     test.expect(1)
-    var s = deploy.bind(http.createServer(function(req, res) { }))
-    var h = s.listen(common.ports[0])
-    test.equal(h, s.instance)
-    h.on('listening', function() {
-      h.close()
-      test.done()
-    })
-  },
 
-  forkForDeploy: function(test) {
-    test.expect(4)
-
-    deploy.on('error', function(err) {
-      test.ok(false)
-    })
-
-    deploy.options = {
-      forker: function(proc, args, options) {
-        test.ok(proc.match(/nodeunit|grunt/))
-        test.ok(args.length > 0)
-        test.strictEqual(args[args.length-1], '--gracefulDeploy')
-        return new mocks.forkerMock()
-      }
+    // Mock the parent receiving messages from the child
+    process = new mocks.processMock()
+    process.send = function(msg, handle) {
+      var json = JSON.parse(msg)
+      test.strictEqual(json.port, common.ports[0])
     }
 
-    setTimeout(function() {
-      test.strictEqual(deploy.lastError, false)
-      test.done()
-    }, 250)
+    deploy.processMessageFromHuman(JSON.stringify({port: common.ports[0]}),
+      null)
 
-    process.kill(process.pid, 'SIGHUP')
+    test.done()
   }
 }
