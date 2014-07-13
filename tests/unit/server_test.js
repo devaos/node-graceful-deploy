@@ -61,21 +61,21 @@ exports.gracefulDeployServer = {
   },
 
   oneServer: function(test) {
-    test.expect(9)
+    test.expect(10)
 
     // 3 assertions happen in here
     common.normalRunAsserts(test, 1)
 
     var forker = new mocks.forkerMock()
       , hupd = false
-      , server1 = deploy.bind(http.createServer(function(req, res) {
-          })).listen(common.ports[0])
-      , server2
+      , servers = [ ]
       , json
 
-    process = new mocks.processMock()
-
     // Mock the child receiving messages from the parent
+    deploy.forker = function(proc, args, options) {
+      return forker
+    }
+
     forker.send = function(msg, handle) {
       json = JSON.parse(msg)
       test.strictEqual(json.port, common.ports[0])
@@ -83,50 +83,113 @@ exports.gracefulDeployServer = {
     }
 
     // Mock the parent receiving messages from the child
+    process = new mocks.processMock()
     process.send = function(msg, handle) {
       json = JSON.parse(msg)
       test.strictEqual(json.port, common.ports[0])
       deploy.processMessageFromChild(msg, handle)
     }
 
-    server1.on('listening', function() {
-      process.kill(process.pid, 'SIGHUP')
-      hupd = true
-    })
-
-    deploy.forker = function(proc, args, options) {
-      return forker
-    }
+    // 1 assertion happens in here
+    servers[0] = common.normalServerWithAsserts(test, common.ports[0])
+      .on('listening', function() {
+        process.kill(process.pid, 'SIGHUP')
+        hupd = true
+      })
 
     setTimeout(function() {
       test.ok(hupd)
       deploy.isChild = true
 
-      server2 = deploy.bind(http.createServer(function(req, res) {
-        })).listen(common.ports[0])
-
-      server2.on('error', function(msg) {
-        test.ok(false)
-      })
-
-      server2.on('close', function(msg) {
-        test.ok(false)
-      })
-
-      server2.on('listening', function() {
-        test.ok(true)
-        deploy.isChild = false
-      })
+      // 1 assertion happens in here
+      servers[1] = common.normalServerWithAsserts(test, common.ports[0])
+        .on('listening', function() {
+          deploy.isChild = false
+        })
     }, 100)
 
     setTimeout(function() {
-      test.ok(server2 && server2._handle)
+      test.ok(servers[1] && servers[1]._handle)
 
-      if(server1 && server1._handle)
-        server1.close()
+      for(var i = 0; i < 2; i++)
+        if(servers[i] && servers[i]._handle)
+          servers[i].close()
 
-      if(server2 && server2._handle)
-        server2.close()
+      test.strictEqual(deploy.lastError, false)
+      test.done()
+    }, 250)
+  },
+
+  twoServers: function(test) {
+    test.expect(16)
+
+    // 3 assertions happen in here
+    common.normalRunAsserts(test, 2)
+
+    var forker = new mocks.forkerMock()
+      , hupd = false
+      , servers = [ ]
+      , json
+
+    // Mock the child receiving messages from the parent
+    deploy.forker = function(proc, args, options) {
+      return forker
+    }
+
+    forker.send = function(msg, handle) {
+      json = JSON.parse(msg)
+      test.ok(json.port == common.ports[0] || json.port == common.ports[1] )
+      deploy.processMessageFromParent(msg, handle)
+    }
+
+    // Mock the parent receiving messages from the child
+    process = new mocks.processMock()
+    process.send = function(msg, handle) {
+      json = JSON.parse(msg)
+      test.ok(json.port == common.ports[0] || json.port == common.ports[1] )
+      deploy.processMessageFromChild(msg, handle)
+    }
+
+    // 1 assertion happens in here
+    servers[0] = common.normalServerWithAsserts(test, common.ports[0])
+      .on('listening', function() {
+        if(hupd)
+          process.kill(process.pid, 'SIGHUP')
+        hupd = true
+      })
+
+    // 1 assertion happens in here
+    servers[1] = common.normalServerWithAsserts(test, common.ports[1])
+      .on('listening', function() {
+        if(hupd)
+          process.kill(process.pid, 'SIGHUP')
+        hupd = true
+      })
+
+    setTimeout(function() {
+      test.ok(hupd)
+      deploy.isChild = true
+
+      // 1 assertion happens in here
+      servers[2] = common.normalServerWithAsserts(test, common.ports[0])
+        .on('listening', function() {
+          deploy.isChild = false
+        })
+
+      // 1 assertion happens in here
+      servers[3] = common.normalServerWithAsserts(test, common.ports[1])
+        .on('listening', function() {
+          deploy.isChild = false
+        })
+    }, 200)
+
+    setTimeout(function() {
+      test.ok(servers[2] && servers[2]._handle)
+      test.ok(servers[3] && servers[3]._handle)
+
+      for(var i = 0; i < 4; i++)
+        if(servers[i] && servers[i]._handle)
+          servers[i].close()
 
       test.strictEqual(deploy.lastError, false)
       test.done()

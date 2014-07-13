@@ -2,8 +2,9 @@
 
 //==============================================================================
 
-var portscanner = require('portscanner')
-  , deploy = require('../../../index')
+var deploy = require('../../../index')
+  , http = require('http')
+  , portscanner = require('portscanner')
   , realProcess = process
 
 //==============================================================================
@@ -42,5 +43,20 @@ var common = module.exports = {
       deploy.on('finished', function() {
         test.ok(true)
       })
+    }
+
+  , normalServerWithAsserts: function(test, port) {
+      var server = deploy.bind(http.createServer(function(req, res) {
+        })).listen(port)
+
+      server.on('error', function(msg) {
+        test.ok(false)
+      })
+
+      server.on('listening', function() {
+        test.ok(true)
+      })
+
+      return server
     }
 }
