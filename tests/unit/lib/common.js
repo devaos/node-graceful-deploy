@@ -9,54 +9,64 @@ var deploy = require('../../../index')
 
 //==============================================================================
 
+process.on('uncaughtException', function(err) {
+  console.error(err.stack);
+});
+
+//==============================================================================
+
 var common = module.exports = {
-    ports: [ ]
-  , setUp: function(done) {
-      deploy.init()
-      deploy.options.exit = false
+  ports: [ ],
 
-      common.ports = [ ]
+  setUp: function(done) {
+    deploy.init()
+    deploy.options = { forcedExitAfterDeploy: false }
 
-      var savePort = function(err, port) {
-        common.ports.push(port)
-        if(common.ports.length >= 3)
-          done()
-      }
+    common.ports = [ ]
 
-      for(var i = 0; i < 3; i++)
-        portscanner.findAPortNotInUse(6000+1000*i, 9000, '127.0.0.1', savePort)
-    }
-  , tearDown: function(done) {
-      process = realProcess
-      done()
+    var savePort = function(err, port) {
+      common.ports.push(port)
+      if(common.ports.length >= 3)
+        done()
     }
 
-  , normalRunAsserts: function(test, numServers) {
-      deploy.on('error', function(err) {
-        test.ok(false)
-      })
+    for(var i = 0; i < 3; i++)
+      portscanner.findAPortNotInUse(6000+1000*i, 9000, '127.0.0.1', savePort)
+  },
 
-      deploy.on('started', function(servers) {
-        test.strictEqual(servers, numServers)
-      })
+  tearDown: function(done) {
+    process = realProcess
+    done()
+  },
 
-      deploy.on('finished', function() {
-        test.ok(true)
-      })
-    }
+  normalRunAsserts: function(test, numServers) {
+    deploy.on('error', function(err) {
+      console.log(err)
+      test.ok(false)
+    })
 
-  , normalServerWithAsserts: function(test, port) {
-      var server = deploy.bind(http.createServer(function(req, res) {
-        })).listen(port)
+    deploy.on('started', function(servers) {
+      test.strictEqual(servers, numServers)
+    })
 
-      server.on('error', function(msg) {
-        test.ok(false)
-      })
+    deploy.on('finished', function() {
+      test.ok(true)
+    })
+  },
 
-      server.on('listening', function() {
-        test.ok(true)
-      })
+  normalServerWithAsserts: function(test, port) {
+    var server = deploy.bind(http.createServer(function(req, res) {
+      })).listen(port)
 
-      return server
-    }
+    server.on('error', function(msg) {
+      console.log(msg.stack)
+      test.ok(false)
+    })
+
+    server.on('listening', function() {
+      test.ok(true)
+    })
+
+    return server
+  }
 }

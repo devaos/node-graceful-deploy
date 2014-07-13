@@ -36,9 +36,11 @@ var deploy
 
 exports.gracefulDeployGeneral = {
   develFilesOk: [ ],
+
   setUp: function(done) {
     common.setUp(done)
   },
+
   tearDown: function(done) {
     common.tearDown(done)
   },
@@ -56,16 +58,18 @@ exports.gracefulDeployGeneral = {
 
   forkForDeploy: function(test) {
     test.expect(4)
-    deploy.exit = false
+
     deploy.on('error', function(err) {
       test.ok(false)
     })
 
-    deploy.forker = function(proc, args, options) {
-      test.ok(proc.match(/nodeunit|grunt/))
-      test.ok(args.length > 0)
-      test.strictEqual(args[args.length-1], '--gracefulDeploy')
-      return new mocks.forkerMock()
+    deploy.options = {
+      forker: function(proc, args, options) {
+        test.ok(proc.match(/nodeunit|grunt/))
+        test.ok(args.length > 0)
+        test.strictEqual(args[args.length-1], '--gracefulDeploy')
+        return new mocks.forkerMock()
+      }
     }
 
     setTimeout(function() {

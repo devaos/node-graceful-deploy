@@ -6,6 +6,8 @@ var em = require('events').EventEmitter
   , http = require('http')
   , portscanner = require('portscanner')
   , deploy = require('../../index')
+  , human = require('../../lib/human')
+  , skinjob = require('../../lib/skinjob')
   , mocks = require('./lib/mocks')
   , common = require('./lib/common')
 
@@ -35,9 +37,11 @@ var em = require('events').EventEmitter
 
 exports.gracefulDeployServer = {
   develFilesOk: [ ],
+
   setUp: function(done) {
     common.setUp(done)
   },
+
   tearDown: function(done) {
     common.tearDown(done)
   },
@@ -48,8 +52,10 @@ exports.gracefulDeployServer = {
     // 3 assertions happen in here
     common.normalRunAsserts(test, 0)
 
-    deploy.forker = function(proc, args, options) {
-      return new mocks.forkerMock()
+    deploy.options = {
+      forker: function(proc, args, options) {
+        return new mocks.forkerMock()
+      }
     }
 
     setTimeout(function() {
@@ -72,14 +78,16 @@ exports.gracefulDeployServer = {
       , json
 
     // Mock the child receiving messages from the parent
-    deploy.forker = function(proc, args, options) {
-      return forker
+    deploy.options = {
+      forker: function(proc, args, options) {
+        return forker
+      }
     }
 
     forker.send = function(msg, handle) {
       json = JSON.parse(msg)
       test.strictEqual(json.port, common.ports[0])
-      deploy.processMessageFromParent(msg, handle)
+      skinjob.processMessageFromHuman(msg, handle)
     }
 
     // Mock the parent receiving messages from the child
@@ -87,7 +95,7 @@ exports.gracefulDeployServer = {
     process.send = function(msg, handle) {
       json = JSON.parse(msg)
       test.strictEqual(json.port, common.ports[0])
-      deploy.processMessageFromChild(msg, handle)
+      human.processMessageFromSkinjob(msg, handle)
     }
 
     // 1 assertion happens in here
@@ -99,12 +107,12 @@ exports.gracefulDeployServer = {
 
     setTimeout(function() {
       test.ok(hupd)
-      deploy.isChild = true
+      deploy.isSkinjob = true
 
       // 1 assertion happens in here
       servers[1] = common.normalServerWithAsserts(test, common.ports[0])
         .on('listening', function() {
-          deploy.isChild = false
+          deploy.isSkinjob = false
         })
     }, 100)
 
@@ -132,14 +140,16 @@ exports.gracefulDeployServer = {
       , json
 
     // Mock the child receiving messages from the parent
-    deploy.forker = function(proc, args, options) {
-      return forker
+    deploy.options = {
+      forker: function(proc, args, options) {
+        return forker
+      }
     }
 
     forker.send = function(msg, handle) {
       json = JSON.parse(msg)
       test.ok(json.port == common.ports[0] || json.port == common.ports[1] )
-      deploy.processMessageFromParent(msg, handle)
+      skinjob.processMessageFromHuman(msg, handle)
     }
 
     // Mock the parent receiving messages from the child
@@ -147,7 +157,7 @@ exports.gracefulDeployServer = {
     process.send = function(msg, handle) {
       json = JSON.parse(msg)
       test.ok(json.port == common.ports[0] || json.port == common.ports[1] )
-      deploy.processMessageFromChild(msg, handle)
+      human.processMessageFromSkinjob(msg, handle)
     }
 
     // 1 assertion happens in here
@@ -168,18 +178,18 @@ exports.gracefulDeployServer = {
 
     setTimeout(function() {
       test.ok(hupd)
-      deploy.isChild = true
+      deploy.isSkinjob = true
 
       // 1 assertion happens in here
       servers[2] = common.normalServerWithAsserts(test, common.ports[0])
         .on('listening', function() {
-          deploy.isChild = false
+          deploy.isSkinjob = false
         })
 
       // 1 assertion happens in here
       servers[3] = common.normalServerWithAsserts(test, common.ports[1])
         .on('listening', function() {
-          deploy.isChild = false
+          deploy.isSkinjob = false
         })
     }, 200)
 
