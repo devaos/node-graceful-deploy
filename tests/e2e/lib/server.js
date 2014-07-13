@@ -25,7 +25,6 @@ setTimeout(function(){
 }, 20000)
 
 deploy.on('deployed', function() {
-  //console.log("done")
   //process.exit(0)
 })
 

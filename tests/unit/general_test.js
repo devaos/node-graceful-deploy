@@ -35,14 +35,14 @@ var deploy
 //==============================================================================
 
 exports.gracefulDeployGeneral = {
-  develFilesOk: [
-  ],
+  develFilesOk: [ ],
   setUp: function(done) {
     common.setUp(done)
   },
   tearDown: function(done) {
     common.tearDown(done)
   },
+
   bindToServer: function(test) {
     test.expect(1)
     var s = deploy.bind(http.createServer(function(req, res) { }))
@@ -53,6 +53,7 @@ exports.gracefulDeployGeneral = {
       test.done()
     })
   },
+
   forkForDeploy: function(test) {
     test.expect(4)
     deploy.exit = false
@@ -64,11 +65,10 @@ exports.gracefulDeployGeneral = {
       test.ok(proc.match(/nodeunit|grunt/))
       test.ok(args.length > 0)
       test.strictEqual(args[args.length-1], '--gracefulDeploy')
-
-      return new mocks.forker()
+      return new mocks.forkerMock()
     }
 
-    setTimeout(function() { 
+    setTimeout(function() {
       test.strictEqual(deploy.lastError, false)
       test.done()
     }, 250)

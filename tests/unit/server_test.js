@@ -34,40 +34,102 @@ var em = require('events').EventEmitter
 //==============================================================================
 
 exports.gracefulDeployServer = {
-  develFilesOk: [
-  ],
+  develFilesOk: [ ],
   setUp: function(done) {
     common.setUp(done)
   },
   tearDown: function(done) {
     common.tearDown(done)
   },
+
   noServers: function(test) {
     test.expect(3)
 
-    deploy.on('error', function(err) {
-      test.ok(false)
-    })
-
-    deploy.on('started', function() {
-      console.log("started")
-      test.ok(true)
-    })
-
-    deploy.on('finished', function() {
-      console.log("finished")
-      test.ok(true)
-    })
+    // 3 assertions happen in here
+    common.normalRunAsserts(test, 0)
 
     deploy.forker = function(proc, args, options) {
-      return new mocks.forker()
+      return new mocks.forkerMock()
     }
 
-    setTimeout(function() { 
+    setTimeout(function() {
       test.strictEqual(deploy.lastError, false)
       test.done()
     }, 250)
 
     process.kill(process.pid, 'SIGHUP')
+  },
+
+  oneServer: function(test) {
+    test.expect(9)
+
+    // 3 assertions happen in here
+    common.normalRunAsserts(test, 1)
+
+    var forker = new mocks.forkerMock()
+      , hupd = false
+      , server1 = deploy.bind(http.createServer(function(req, res) {
+          })).listen(common.ports[0])
+      , server2
+      , json
+
+    process = new mocks.processMock()
+
+    // Mock the child receiving messages from the parent
+    forker.send = function(msg, handle) {
+      json = JSON.parse(msg)
+      test.strictEqual(json.port, common.ports[0])
+      deploy.processMessageFromParent(msg, handle)
+    }
+
+    // Mock the parent receiving messages from the child
+    process.send = function(msg, handle) {
+      json = JSON.parse(msg)
+      test.strictEqual(json.port, common.ports[0])
+      deploy.processMessageFromChild(msg, handle)
+    }
+
+    server1.on('listening', function() {
+      process.kill(process.pid, 'SIGHUP')
+      hupd = true
+    })
+
+    deploy.forker = function(proc, args, options) {
+      return forker
+    }
+
+    setTimeout(function() {
+      test.ok(hupd)
+      deploy.isChild = true
+
+      server2 = deploy.bind(http.createServer(function(req, res) {
+        })).listen(common.ports[0])
+
+      server2.on('error', function(msg) {
+        test.ok(false)
+      })
+
+      server2.on('close', function(msg) {
+        test.ok(false)
+      })
+
+      server2.on('listening', function() {
+        test.ok(true)
+        deploy.isChild = false
+      })
+    }, 100)
+
+    setTimeout(function() {
+      test.ok(server2 && server2._handle)
+
+      if(server1 && server1._handle)
+        server1.close()
+
+      if(server2 && server2._handle)
+        server2.close()
+
+      test.strictEqual(deploy.lastError, false)
+      test.done()
+    }, 250)
   }
 }
