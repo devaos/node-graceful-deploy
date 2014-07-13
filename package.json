@@ -1,6 +1,6 @@
 {
   "name": "graceful-deploy",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Gracefully deploy a node.js service with zero downtime, letting existing requests finish up while a new deployed process handles new incoming requests",
   "main": "index.js",
   "scripts": {
