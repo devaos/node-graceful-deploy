@@ -3,7 +3,9 @@
 //==============================================================================
 
 var em = require('events').EventEmitter
-  , deploy = require('../../lib/skinjob')
+  , http = require('http')
+  , skinjob = require('../../lib/skinjob')
+  , core = require('../../lib/core')
   , mocks = require('./lib/mocks')
   , common = require('./lib/common')
 
@@ -43,7 +45,7 @@ exports.commonTest = {
   },
 
   noServers: function(test) {
-    test.expect(1)
+    test.expect(2)
 
     // Mock the parent receiving messages from the child
     process = new mocks.processMock()
@@ -52,9 +54,97 @@ exports.commonTest = {
       test.strictEqual(json.port, common.ports[0])
     }
 
-    deploy.processMessageFromHuman(JSON.stringify({port: common.ports[0]}),
+    skinjob.processMessageFromHuman(JSON.stringify({port: common.ports[0]}),
       null)
 
+    test.strictEqual(core.lastError, false)
     test.done()
+  },
+
+  noHandle: function(test) {
+    test.expect(3)
+
+    // Mock the parent receiving messages from the child
+    process = new mocks.processMock()
+    process.send = function(msg, handle) {
+      var json = JSON.parse(msg)
+      test.strictEqual(json.port, common.ports[0])
+    }
+
+    skinjob.servers.push({
+        port: common.ports[0]
+      , instance: http.createServer(function(req, res) { })
+    })
+
+    skinjob.servers[0].instance.on('listening', function() {
+      test.ok(true)
+    })
+
+    skinjob.processMessageFromHuman(JSON.stringify({port: common.ports[0]}),
+      null)
+
+    setTimeout(function() {
+      skinjob.servers[0].instance.close()
+      test.strictEqual(core.lastError, false)
+      test.done()
+    }, 250)
+  },
+
+  errorMessages: function(test) {
+    test.expect(4)
+
+    core.logger = null
+    core.emitter = new em()
+    core.emitter.on('error', function(err) {
+      test.ok(true)
+    })
+
+    skinjob.processMessageFromHuman()
+    skinjob.processMessageFromHuman('hi', null)
+    skinjob.processMessageFromHuman((JSON.stringify({hi: 'sucker'}), null))
+
+    test.notEqual(core.lastError, false)
+    test.done()
+  },
+
+  errorNoHandleAddressInUse: function(test) {
+    test.expect(4)
+
+    core.logger = null
+    core.emitter = new em()
+    core.emitter.on('error', function(err) {
+      test.ok(true)
+    })
+
+    // Mock the parent receiving messages from the child
+    process = new mocks.processMock()
+    process.send = function(msg, handle) {
+      var json = JSON.parse(msg)
+      test.ok(json.received)
+      test.strictEqual(json.port, common.ports[0])
+    }
+
+    skinjob.addServer({
+        port: common.ports[0]
+      , instance: http.createServer(function(req, res) { })
+    })
+
+    skinjob.servers[0].instance.on('listening', function() {
+      test.ok(false)
+    })
+
+    var blockingServer = http.createServer(function(req, res) {
+      }).listen(common.ports[0])
+
+    blockingServer.on('listening', function() {
+      skinjob.processMessageFromHuman(JSON.stringify({port: common.ports[0]}),
+        null)
+    })
+
+    setTimeout(function() {
+      blockingServer.close()
+      test.notEqual(core.lastError, false)
+      test.done()
+    }, 250)
   }
 }

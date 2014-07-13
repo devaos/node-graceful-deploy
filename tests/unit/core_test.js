@@ -3,7 +3,7 @@
 //==============================================================================
 
 var em = require('events').EventEmitter
-  , deploy = require('../../lib/common')
+  , core = require('../../lib/core')
   , common = require('./lib/common')
 
 //==============================================================================
@@ -30,7 +30,7 @@ var em = require('events').EventEmitter
 
 //==============================================================================
 
-exports.commonTest = {
+exports.coreTest = {
   develFilesOk: [ ],
 
   setUp: function(done) {
@@ -44,7 +44,7 @@ exports.commonTest = {
   iHeartDebug: function(test) {
     test.expect(6)
 
-    deploy.logger = {
+    core.logger = {
       error: function(msg, obj) {
         test.ok(false)
       },
@@ -52,10 +52,10 @@ exports.commonTest = {
         test.ok(false)
       }
     }
-    deploy.verbose = false
-    deploy.debug('flowers', 69, false)
+    core.verbose = false
+    core.debug('flowers', 69, false)
 
-    deploy.logger = {
+    core.logger = {
       error: function(msg, obj) {
         test.ok(false)
       },
@@ -65,10 +65,10 @@ exports.commonTest = {
         test.strictEqual(obj.message, 'flowers')
       }
     }
-    deploy.verbose = true
-    deploy.debug('flowers', 69, false)
+    core.verbose = true
+    core.debug('flowers', 69, false)
 
-    deploy.logger = {
+    core.logger = {
       error: function(msg, obj) {
         test.strictEqual(msg, 'graceful-deploy')
         test.strictEqual(obj.port, 96)
@@ -78,8 +78,8 @@ exports.commonTest = {
         test.ok(false)
       }
     }
-    deploy.verbose = false
-    deploy.debug('monkeys', 96, true)
+    core.verbose = false
+    core.debug('monkeys', 96, true)
 
     test.done()
   },
@@ -87,11 +87,11 @@ exports.commonTest = {
   iDontHeartErrors: function(test) {
     test.expect(4)
 
-    deploy.emitter = new em()
-    deploy.emitter.on('error', function(msg) {
+    core.emitter = new em()
+    core.emitter.on('error', function(msg) {
       test.strictEqual(msg, 'flowers')
     })
-    deploy.logger = {
+    core.logger = {
       error: function(msg, obj) {
         test.strictEqual(msg, 'graceful-deploy')
         test.strictEqual(obj.port, 69)
@@ -101,8 +101,8 @@ exports.commonTest = {
         test.ok(false)
       }
     }
-    deploy.verbose = false
-    deploy.error('flowers', 69)
+    core.verbose = false
+    core.error('flowers', 69)
     test.done()
   }
 }
