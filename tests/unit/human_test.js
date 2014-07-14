@@ -344,6 +344,81 @@ exports.humanTest = {
     }, 250)
   },
 
+  activeServerDownedWhileWaiting: function(test) {
+    test.expect(8)
+
+    human.holdDeployForSilence = true
+
+    var received = false
+    var child = new mocks.childProcessMock()
+    human.forker = function(proc, args, options) {
+      return child
+    }
+
+    // Mock the child receiving messages from the parent
+    child.send = function(msg, handle) {
+      var json = JSON.parse(msg)
+      test.ok('unused')
+      test.strictEqual(json.port, common.ports[0])
+      test.ok(core.isHandleDown(handle))
+
+      received = true
+      human.processMessageFromSkinjob(JSON.stringify({received: true,
+        port: common.ports[0]}))
+
+      test.strictEqual(human.servers.length, 0)
+    }
+
+    human.addServer({
+        port: common.ports[0]
+      , instance: http.createServer(function(req, res) {
+          human.begin()
+          human.processMessageFromSkinjob(JSON.stringify({deploy: true,
+            port: common.ports[0]}))
+
+          // We did not receive the deploy before we finished the request
+          test.ok(!received)
+
+          req.on('data', function(data) {
+            res.end('pong\n')
+            human.servers[0].instance.close()
+          })
+        }).listen(common.ports[0])
+    })
+
+    human.servers[0].instance.on('listening', function() {
+      test.ok(true)
+
+      var options = {
+        hostname: '127.0.0.1',
+        port: common.ports[0],
+        path: '/ping',
+        method: 'POST',
+        headers: { 'Connection': 'Close' }
+      }
+
+      var req = http.request(options, function(res) {
+        if(res.statusCode === 200) {
+          test.ok(true)
+        }
+      })
+
+      req.on('error', function(e) {
+        test.ok(false)
+      })
+
+      // write data to request body
+      setTimeout(function() {
+        req.end('ping\n')
+      }, 100)
+    })
+
+    setTimeout(function() {
+      test.strictEqual(core.lastError, false)
+      test.done()
+    }, 250)
+  },
+
   errorMessages: function(test) {
     test.expect(4)
 
