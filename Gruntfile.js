@@ -2,6 +2,19 @@
 
 module.exports = function(grunt) {
 
+  function dealWithShell(err, stdout, stderr, cb) {
+    if(stdout)
+      console.log(stdout.trim())
+
+    if(err)
+      grunt.fatal(err)
+
+    if(stderr)
+      grunt.fatal(stderr)
+
+    cb()
+  }
+
   // Load Grunt tasks declared in the package.json file
   require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks)
 
@@ -32,6 +45,16 @@ module.exports = function(grunt) {
     // Unit tests
     nodeunit: {
       tests: ['tests/unit/*_test.js']
+    },
+
+    // End-to-end tests
+    shell: {
+      options: {
+          callback: dealWithShell
+      },
+      e2e: {
+        command: './scripts/run-e2e.sh'
+      }
     },
 
     // Test while you work
@@ -68,6 +91,7 @@ module.exports = function(grunt) {
     'clean:coverage',
     'jshint',
     'nodeunit',
+    'shell:e2e',
     'clean:coverage'
   ])
 

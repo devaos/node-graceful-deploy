@@ -2,7 +2,8 @@
 
 //==============================================================================
 
-var deploy = require('../../index')
+var http = require('http')
+  , deploy = require('../../index')
   , human = require('../../lib/human')
   , skinjob = require('../../lib/skinjob')
   , mocks = require('./lib/mocks')
@@ -32,7 +33,7 @@ var deploy = require('../../index')
 
 //==============================================================================
 
-exports.serverTest = {
+exports.generalTest = {
   develFilesOk: [ ],
 
   setUp: function(done) {
@@ -41,6 +42,41 @@ exports.serverTest = {
 
   tearDown: function(done) {
     common.tearDown(done)
+  },
+
+  bindToServer: function(test) {
+    test.expect(1)
+    var s = deploy.bind(http.createServer(function(req, res) { }))
+    var h = s.listen(common.ports[0])
+    test.equal(h, s.instance)
+    h.on('listening', function() {
+      h.close()
+      test.done()
+    })
+  },
+
+  forkForDeploy: function(test) {
+    test.expect(4)
+
+    deploy.on('error', function(err) {
+      test.ok(false)
+    })
+
+    deploy.options = {
+      forker: function(proc, args, options) {
+        test.ok(proc.match(/nodeunit|grunt/))
+        test.ok(args.length > 0)
+        test.strictEqual(args[args.length-1], '--gracefulDeploy')
+        return new mocks.forkerMock()
+      }
+    }
+
+    setTimeout(function() {
+      test.strictEqual(deploy.lastError, false)
+      test.done()
+    }, 250)
+
+    process.kill(process.pid, 'SIGHUP')
   },
 
   noServers: function(test) {

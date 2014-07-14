@@ -61,6 +61,7 @@ function spawnServer(callback) {
     throw('unable to fork')
 
   var on = function(data) {
+    //console.log(data.toString())
     if(data.toString().match(/Process \d+ with version \d+ listening on port \d+ and port \d+/)) {
       callback()
     }

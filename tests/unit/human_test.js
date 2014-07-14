@@ -226,7 +226,7 @@ exports.humanTest = {
         port: common.ports[0]
       , instance: http.createServer(function(req, res) {
           human.begin()
-          child.emit('message', JSON.stringify({deploy: true,
+          human.processMessageFromSkinjob(JSON.stringify({deploy: true,
             port: common.ports[0]}))
 
           // We received the deploy before we finished the request
@@ -299,7 +299,7 @@ exports.humanTest = {
         port: common.ports[0]
       , instance: http.createServer(function(req, res) {
           human.begin()
-          child.emit('message', JSON.stringify({deploy: true,
+          human.processMessageFromSkinjob(JSON.stringify({deploy: true,
             port: common.ports[0]}))
 
           // We did not receive the deploy before we finished the request
