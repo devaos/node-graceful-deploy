@@ -2,19 +2,6 @@
 
 module.exports = function(grunt) {
 
-  function dealWithShell(err, stdout, stderr, cb) {
-    if(stdout)
-      console.log(stdout.trim())
-
-    if(err)
-      grunt.fatal(err)
-
-    if(stderr)
-      grunt.fatal(stderr)
-
-    cb()
-  }
-
   // Load Grunt tasks declared in the package.json file
   require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks)
 
@@ -50,7 +37,15 @@ module.exports = function(grunt) {
     // End-to-end tests
     shell: {
       options: {
-          callback: dealWithShell
+        callback: function dealWithShell(err, stdout, stderr, cb) {
+          if(stdout)
+            console.log(stdout.trim())
+          if(err)
+            grunt.fatal(err)
+          if(stderr)
+            grunt.fatal(stderr)
+          cb()
+        }
       },
       e2e: {
         command: './scripts/run-e2e.sh'

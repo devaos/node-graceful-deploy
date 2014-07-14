@@ -54,7 +54,7 @@ function findPort(callback) {
 }
 
 function spawnServer(callback) {
-  proc = child.fork(__dirname + '/lib/server',
+  proc = child.fork(__dirname + '/lib/server-hanger',
     ['--port1', port1, '--port2', port2], {silent: true})
 
   if(!proc)
