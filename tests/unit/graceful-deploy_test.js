@@ -50,7 +50,7 @@ exports.generalTest = {
     var h = s.listen(common.ports[0])
     test.equal(h, s.instance)
     h.on('listening', function() {
-      h.close()
+      s.close()
       test.done()
     })
   },

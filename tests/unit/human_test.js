@@ -6,6 +6,7 @@ var em = require('events').EventEmitter
   , http = require('http')
   , core = require('../../lib/core')
   , human = require('../../lib/human')
+  , server = require('../../lib/server')
   , mocks = require('./lib/mocks')
   , common = require('./lib/common')
 
@@ -151,11 +152,9 @@ exports.humanTest = {
       test.done()
     }
 
-    human.addServer({
-        port: common.ports[0]
-      , instance: http.createServer(function(req, res) {
-          }).listen(common.ports[0])
-    })
+    human.addServer(new server(
+      http.createServer(function(req, res) {}).listen(common.ports[0]),
+      common.ports[0]))
 
     human.servers[0].instance.on('listening', function() {
       test.ok(true)
@@ -180,17 +179,11 @@ exports.humanTest = {
         port: common.ports[0]}))
 
       test.strictEqual(human.servers.length, 0)
-
-      handle.close()
-      test.strictEqual(core.lastError, false)
-      test.done()
     }
 
-    human.addServer({
-        port: common.ports[0]
-      , instance: http.createServer(function(req, res) {
-          }).listen(common.ports[0])
-    })
+    human.addServer(new server(
+      http.createServer(function(req, res) { }).listen(common.ports[0]),
+      common.ports[0]))
 
     human.servers[0].instance.on('listening', function() {
       test.ok(true)
@@ -198,6 +191,11 @@ exports.humanTest = {
       human.processMessageFromSkinjob(JSON.stringify({deploy: true,
         port: common.ports[0]}))
     })
+
+    setTimeout(function() {
+      test.strictEqual(core.lastError, false)
+      test.done()
+    }, 250)
   },
 
   activeServerNoWait: function(test) {
@@ -222,21 +220,20 @@ exports.humanTest = {
       test.strictEqual(human.servers.length, 0)
     }
 
-    human.addServer({
-        port: common.ports[0]
-      , instance: http.createServer(function(req, res) {
-          human.begin()
-          human.processMessageFromSkinjob(JSON.stringify({deploy: true,
-            port: common.ports[0]}))
+    human.addServer(new server(
+      http.createServer(function(req, res) {
+        human.begin()
+        human.processMessageFromSkinjob(JSON.stringify({deploy: true,
+          port: common.ports[0]}))
 
-          // We received the deploy before we finished the request
-          test.ok(received)
+        // We received the deploy before we finished the request
+        test.ok(received)
 
-          req.on('data', function(data) {
-            res.end('pong\n')
-          })
-        }).listen(common.ports[0])
-    })
+        req.on('data', function(data) {
+          res.end('pong\n')
+        })
+      }).listen(common.ports[0]),
+      common.ports[0]))
 
     human.servers[0].instance.on('listening', function() {
       test.ok(true)
@@ -295,21 +292,20 @@ exports.humanTest = {
       test.strictEqual(human.servers.length, 0)
     }
 
-    human.addServer({
-        port: common.ports[0]
-      , instance: http.createServer(function(req, res) {
-          human.begin()
-          human.processMessageFromSkinjob(JSON.stringify({deploy: true,
-            port: common.ports[0]}))
+    human.addServer(new server(
+      http.createServer(function(req, res) {
+        human.begin()
+        human.processMessageFromSkinjob(JSON.stringify({deploy: true,
+          port: common.ports[0]}))
 
-          // We did not receive the deploy before we finished the request
-          test.ok(!received)
+        // We did not receive the deploy before we finished the request
+        test.ok(!received)
 
-          req.on('data', function(data) {
-            res.end('pong\n')
-          })
-        }).listen(common.ports[0])
-    })
+        req.on('data', function(data) {
+          res.end('pong\n')
+        })
+      }).listen(common.ports[0]),
+      common.ports[0]))
 
     human.servers[0].instance.on('listening', function() {
       test.ok(true)
@@ -369,22 +365,21 @@ exports.humanTest = {
       test.strictEqual(human.servers.length, 0)
     }
 
-    human.addServer({
-        port: common.ports[0]
-      , instance: http.createServer(function(req, res) {
-          human.begin()
-          human.processMessageFromSkinjob(JSON.stringify({deploy: true,
-            port: common.ports[0]}))
+    human.addServer(new server(
+      http.createServer(function(req, res) {
+        human.begin()
+        human.processMessageFromSkinjob(JSON.stringify({deploy: true,
+          port: common.ports[0]}))
 
-          // We did not receive the deploy before we finished the request
-          test.ok(!received)
+        // We did not receive the deploy before we finished the request
+        test.ok(!received)
 
-          req.on('data', function(data) {
-            res.end('pong\n')
-            human.servers[0].instance.close()
-          })
-        }).listen(common.ports[0])
-    })
+        req.on('data', function(data) {
+          res.end('pong\n')
+          human.servers[0].instance.close()
+        })
+      }).listen(common.ports[0]),
+      common.ports[0]))
 
     human.servers[0].instance.on('listening', function() {
       test.ok(true)
