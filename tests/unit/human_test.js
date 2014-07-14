@@ -425,7 +425,7 @@ exports.humanTest = {
 
     human.processMessageFromSkinjob()
     human.processMessageFromSkinjob('hi', null)
-    human.processMessageFromSkinjob((JSON.stringify({hi: 'sucker'}), null))
+    human.processMessageFromSkinjob(JSON.stringify({hi: 'sucker'}, null))
 
     test.notEqual(core.lastError, false)
     test.done()
