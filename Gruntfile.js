@@ -15,7 +15,8 @@ module.exports = function(grunt) {
         node: true,
         laxcomma: true,
         asi: true,
-        validthis: true
+        validthis: true,
+        newcap: false
       },
       files: {
         src: ['lib/**/*.js', 'tests/**/*.js']

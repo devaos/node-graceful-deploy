@@ -69,7 +69,7 @@ exports.serverTest = {
     // 3 assertions happen in here
     common.normalRunAsserts(test, 1)
 
-    var forker = new mocks.forkerMock()
+    var child = new mocks.childProcessMock()
       , hupd = false
       , servers = [ ]
       , json
@@ -77,11 +77,11 @@ exports.serverTest = {
     // Mock the child receiving messages from the parent
     deploy.options = {
       forker: function(proc, args, options) {
-        return forker
+        return child
       }
     }
 
-    forker.send = function(msg, handle) {
+    child.send = function(msg, handle) {
       json = JSON.parse(msg)
       test.strictEqual(json.port, common.ports[0])
       skinjob.processMessageFromHuman(msg, handle)
@@ -131,7 +131,7 @@ exports.serverTest = {
     // 3 assertions happen in here
     common.normalRunAsserts(test, 2)
 
-    var forker = new mocks.forkerMock()
+    var child = new mocks.childProcessMock()
       , hupd = false
       , servers = [ ]
       , json
@@ -139,11 +139,11 @@ exports.serverTest = {
     // Mock the child receiving messages from the parent
     deploy.options = {
       forker: function(proc, args, options) {
-        return forker
+        return child
       }
     }
 
-    forker.send = function(msg, handle) {
+    child.send = function(msg, handle) {
       json = JSON.parse(msg)
       test.ok(json.port == common.ports[0] || json.port == common.ports[1] )
       skinjob.processMessageFromHuman(msg, handle)

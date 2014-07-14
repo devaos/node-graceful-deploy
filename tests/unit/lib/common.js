@@ -2,9 +2,10 @@
 
 //==============================================================================
 
-var deploy = require('../../../index')
-  , http = require('http')
+var http = require('http')
   , portscanner = require('portscanner')
+  , deploy = require('../../../index')
+  , mocks = require('./mocks')
   , realProcess = process
 
 //==============================================================================
@@ -20,7 +21,10 @@ var common = module.exports = {
 
   setUp: function(done) {
     deploy.init()
-    deploy.options = { forcedExitAfterDeploy: false }
+    deploy.options = {
+        forcedExitAfterDeploy: false
+      , forker: function(proc, args, options) { return new mocks.forkerMock() }
+    }
 
     common.ports = [ ]
 

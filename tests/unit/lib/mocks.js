@@ -7,14 +7,11 @@ var em = require('events').EventEmitter
 
 //==============================================================================
 
-function forkerMock() { }
-forkerMock.prototype = new em()
-forkerMock.prototype.disconnect = function() { }
-forkerMock.prototype.unref = function() { }
-forkerMock.prototype.send = function() { }
+function forkerMock() {
+  return new childProcessMock()
+}
 
 //==============================================================================
-
 
 function processMock() { }
 processMock.prototype = new em()
@@ -33,5 +30,14 @@ processMock.prototype.binding = function(arg) { return realProcess.binding(arg) 
 
 //==============================================================================
 
+function childProcessMock() { }
+childProcessMock.prototype = new em()
+childProcessMock.prototype.disconnect = function() { }
+childProcessMock.prototype.unref = function() { }
+childProcessMock.prototype.send = function() { }
+
+//==============================================================================
+
 module.exports.forkerMock = forkerMock
 module.exports.processMock = processMock
+module.exports.childProcessMock = childProcessMock

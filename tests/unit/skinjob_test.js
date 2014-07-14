@@ -4,8 +4,8 @@
 
 var em = require('events').EventEmitter
   , http = require('http')
-  , skinjob = require('../../lib/skinjob')
   , core = require('../../lib/core')
+  , skinjob = require('../../lib/skinjob')
   , mocks = require('./lib/mocks')
   , common = require('./lib/common')
 
@@ -33,7 +33,7 @@ var em = require('events').EventEmitter
 
 //==============================================================================
 
-exports.commonTest = {
+exports.skinjobTest = {
   develFilesOk: [ ],
 
   setUp: function(done) {
@@ -71,7 +71,7 @@ exports.commonTest = {
       test.strictEqual(json.port, common.ports[0])
     }
 
-    skinjob.servers.push({
+    skinjob.addServer({
         port: common.ports[0]
       , instance: http.createServer(function(req, res) { })
     })
